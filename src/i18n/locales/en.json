@@ -1,0 +1,314 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "settings": "Settings",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "duplicate": "Duplicate"
+  },
+  "popup": {
+    "title": "Web2Obsidian",
+    "captureButton": "Clip to Obsidian",
+    "captureWithAI": "Clip with AI Summary",
+    "openSettings": "Settings",
+    "clipSuccess": "Clipped successfully! Opening Obsidian...",
+    "clipError": "Failed to clip page",
+    "vaultNotConfigured": "Please configure your vault name in settings",
+    "apiNotConfigured": "Please configure your API key in settings",
+    "runningTask": "Processing",
+    "runningTasks": "Processing Tasks",
+    "connectionChecking": "Checking connection...",
+    "connectionConnected": "Connected to Obsidian",
+    "connectionDisconnected": "Obsidian is not running",
+    "openObsidian": "Open",
+    "confirmOpenObsidian": "Obsidian is not running. Would you like to open it?",
+    "connectionError": "Could not connect to Obsidian. Please make sure Obsidian is running with the Local REST API plugin enabled.",
+    "notClippable": "This page cannot be clipped (only HTTP/HTTPS pages are supported)",
+    "recentTasks": "Recent Tasks",
+    "processing": "Processing...",
+    "templateSet": "Template Set",
+    "progress": {
+      "extracting": "Extracting page info...",
+      "llmContent": "Processing with LLM...",
+      "llmTags": "Generating tags...",
+      "saving": "Saving to Obsidian...",
+      "done": "Done"
+    }
+  },
+  "options": {
+    "title": "Settings",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "saveError": "Failed to save",
+    "tabs": {
+      "general": "General",
+      "templates": "Templates",
+      "variables": "Variables",
+      "llm": "LLM Provider"
+    },
+    "general": {
+      "title": "General",
+      "vault": "Obsidian Vault",
+      "vaultName": "Vault Name",
+      "vaultNamePlaceholder": "Enter your Obsidian vault name",
+      "vaultNameHint": "The name of the vault as it appears in Obsidian",
+      "testConnection": "Open Vault",
+      "browse": "Browse",
+      "defaultTemplates": "Default Templates",
+      "defaultWebTemplate": "Web Template",
+      "defaultWebTemplateHint": "Template used when clipping web pages",
+      "defaultYouTubeTemplate": "YouTube Template",
+      "defaultYouTubeTemplateHint": "Template used when clipping YouTube videos",
+      "noTemplate": "No template selected"
+    },
+    "shortcuts": {
+      "title": "Keyboard Shortcuts",
+      "default": "Default Clip",
+      "defaultHint": "Clips with the default template based on page type (Web/YouTube)",
+      "shortcut1": "Shortcut 1",
+      "shortcut2": "Shortcut 2",
+      "shortcut3": "Shortcut 3",
+      "selectTemplate": "Select template",
+      "clickToSet": "Click to set shortcut",
+      "pressKey": "Press shortcut key..."
+    },
+    "obsidianApi": {
+      "title": "Obsidian Local REST API",
+      "enabled": "Use Local REST API",
+      "enabledHint": "Save notes via HTTP instead of obsidian:// URI (requires Local REST API plugin)",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter your API key from Local REST API plugin",
+      "apiKeyHint": "Find this in Obsidian Settings > Local REST API > API Key",
+      "port": "Port",
+      "portHint": "Default: 27123",
+      "insecureMode": "Use HTTP (insecure)",
+      "testConnection": "Test Connection",
+      "connectionSuccess": "Connected successfully!",
+      "connectionError": "Connection failed"
+    },
+    "importExport": {
+      "title": "Import/Export Settings",
+      "description": "Export your settings to a file or import settings from a backup.",
+      "export": "Export Settings",
+      "import": "Import Settings",
+      "confirmImport": "This will replace all current settings. Continue?",
+      "invalidFile": "Invalid settings file",
+      "importError": "Failed to import settings"
+    },
+    "templates": {
+      "title": "Templates",
+      "sets": "Template Sets",
+      "addSet": "Add Set",
+      "setName": "Set Name",
+      "shortcut": "Shortcut",
+      "maxSetsReached": "Maximum of 3 custom sets allowed",
+      "confirmDeleteSet": "Are you sure you want to delete this template set?",
+      "selectSet": "Select a template set from the sidebar",
+      "web": "Web",
+      "youtube": "YouTube",
+      "newTemplate": "New Template",
+      "editTemplate": "Edit Template",
+      "deleteConfirm": "Are you sure you want to delete this template?",
+      "name": "Name",
+      "namePlaceholder": "Template name",
+      "folder": "Folder",
+      "folderPlaceholder": "e.g., Clippings/{{domain}}",
+      "folderHint": "Folder path where notes will be saved",
+      "filename": "Filename",
+      "filenamePlaceholder": "e.g., {{title}}",
+      "filenameHint": "Filename for the note (without .md extension)",
+      "properties": "Properties",
+      "propertiesHint": "Frontmatter properties for the note",
+      "propertyKey": "Key",
+      "propertyValue": "Value",
+      "propertyType": "Type",
+      "addProperty": "Add Property",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "propertyTypes": {
+        "text": "Text",
+        "list": "List",
+        "checkbox": "Checkbox",
+        "date": "Date",
+        "datetime": "Date/Time",
+        "number": "Number",
+        "tags": "Tags"
+      },
+      "addItem": "Add item...",
+      "requiredProperty": "Required property (cannot be deleted)",
+      "content": "Content",
+      "contentPlaceholder": "Note content template...",
+      "contentHint": "Main content of the note (used when LLM is disabled)",
+      "llm": "LLM Processing",
+      "useLLM": "Use LLM",
+      "useLLMHint": "Enable LLM processing for this template",
+      "llmGenerateContent": "Generate Content",
+      "llmGenerateContentHint": "Use LLM to generate or summarize the note content",
+      "llmPrompt": "Content Prompt",
+      "llmPromptPlaceholder": "Enter the prompt to send to LLM...",
+      "llmPromptHint": "Prompt template for content generation. Use {{content}} or {{transcript}} to include page content.",
+      "llmGenerateTags": "Generate Tags",
+      "llmGenerateTagsHint": "Use LLM to automatically generate tags for the note",
+      "llmTagsPrompt": "Tags Prompt",
+      "llmTagsPromptPlaceholder": "Enter the prompt for tag generation...",
+      "llmTagsPromptHint": "Prompt template for tag generation. The LLM should return a JSON array of tags.",
+      "llmProviderOverride": "Provider",
+      "llmProviderOverrideHint": "Default provider: {{provider}}",
+      "useDefaultProvider": "Use default provider",
+      "llmModelOverride": "Model",
+      "llmModelOverrideHint": "Select model from {{provider}}",
+      "useDefaultModel": "Use default model",
+      "empty": "No templates defined",
+      "cannotDeleteDefault": "Cannot delete the default template"
+    },
+    "variables": {
+      "title": "Template Variables",
+      "usage": "How to Use Variables",
+      "description": "These variables can be used in folder paths, file names, and prompts. Use the format {{variableName}}.",
+      "example": "Example",
+      "exampleUsage": "Folder path: Clippings/{{domain}}/{{date}}",
+      "builtIn": "Built-in Variables",
+      "builtInWeb": "Web Variables",
+      "builtInYouTube": "YouTube Variables",
+      "custom": "Custom Variables",
+      "customEmpty": "No custom variables defined",
+      "customAdd": "Add Variable",
+      "customName": "Name",
+      "customNamePlaceholder": "variableName",
+      "customValue": "Value",
+      "customValuePlaceholder": "Default value",
+      "customDelete": "Delete",
+      "customNameError": "Variable name already exists",
+      "customNameInvalid": "Use only letters, numbers, and underscores",
+      "vars": {
+        "title": {
+          "name": "title",
+          "description": "Page title"
+        },
+        "url": {
+          "name": "url",
+          "description": "Full URL of the page"
+        },
+        "domain": {
+          "name": "domain",
+          "description": "Domain name (e.g., example.com)"
+        },
+        "description": {
+          "name": "description",
+          "description": "Page description (from meta tags)"
+        },
+        "author": {
+          "name": "author",
+          "description": "Page author (from meta tags)"
+        },
+        "published": {
+          "name": "published",
+          "description": "Published date (from meta tags)"
+        },
+        "date": {
+          "name": "date",
+          "description": "Current date (YYYY-MM-DD)"
+        },
+        "time": {
+          "name": "time",
+          "description": "Current time (HH:mm)"
+        },
+        "datetime": {
+          "name": "datetime",
+          "description": "Date and time (YYYY-MM-DD HH:mm)"
+        },
+        "year": {
+          "name": "year",
+          "description": "Current year (YYYY)"
+        },
+        "month": {
+          "name": "month",
+          "description": "Current month (MM)"
+        },
+        "day": {
+          "name": "day",
+          "description": "Current day (DD)"
+        },
+        "selection": {
+          "name": "selection",
+          "description": "Selected text on the page"
+        },
+        "content": {
+          "name": "content",
+          "description": "Main content of the page"
+        },
+        "transcript": {
+          "name": "transcript",
+          "description": "YouTube video transcript"
+        },
+        "channel": {
+          "name": "channel",
+          "description": "YouTube channel name"
+        },
+        "videoId": {
+          "name": "videoId",
+          "description": "YouTube video ID"
+        },
+        "duration": {
+          "name": "duration",
+          "description": "YouTube video duration"
+        }
+      }
+    },
+    "llm": {
+      "provider": "LLM Provider",
+      "settings": "Settings",
+      "providers": {
+        "openai": "OpenAI",
+        "azure-openai": "Azure OpenAI",
+        "claude": "Claude",
+        "gemini": "Gemini",
+        "ollama": "Ollama"
+      },
+      "dev": "Dev",
+      "default": "Default",
+      "setAsDefault": "Set as default provider",
+      "inDevelopment": "This provider is currently in development and may not work as expected.",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter your API key",
+      "model": "Model",
+      "availableModels": "Available Models",
+      "defaultModelLabel": "Default Model",
+      "selectModel": "Select a model",
+      "optional": "Optional",
+      "openaiApiKeyHint": "Get your API key from platform.openai.com",
+      "baseUrl": "Base URL",
+      "baseUrlHint": "Custom API endpoint (leave empty for default)",
+      "azureEndpoint": "Endpoint",
+      "azureEndpointHint": "Your Azure OpenAI resource endpoint",
+      "azureApiVersion": "API Version",
+      "azureModelHint": "Add your deployment names (e.g., my-gpt4o-deployment)",
+      "claudeApiKeyHint": "Get your API key from console.anthropic.com",
+      "ollamaEndpoint": "Endpoint",
+      "ollamaEndpointHint": "Ollama server endpoint (default: http://localhost:11434)",
+      "defaultModels": "Default Models",
+      "customModels": "Custom Models",
+      "addModel": "Add",
+      "addModelPlaceholder": "Enter model name..."
+    }
+  },
+  "content": {
+    "capturing": "Capturing page content...",
+    "captured": "Page captured successfully",
+    "captureError": "Failed to capture page"
+  },
+  "toast": {
+    "success": "Saved to Obsidian",
+    "error": "Failed to save: {{error}}"
+  },
+  "contextMenu": {
+    "clipPage": "Clip to Obsidian",
+    "clipSelection": "Clip selection to Obsidian"
+  }
+}

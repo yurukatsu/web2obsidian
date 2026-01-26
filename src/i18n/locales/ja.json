@@ -1,0 +1,314 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "settings": "設定",
+    "close": "閉じる",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "duplicate": "複製"
+  },
+  "popup": {
+    "title": "Web2Obsidian",
+    "captureButton": "Obsidian にクリップ",
+    "captureWithAI": "AI 要約付きでクリップ",
+    "openSettings": "設定",
+    "clipSuccess": "クリップしました！Obsidian を開いています...",
+    "clipError": "クリップに失敗しました",
+    "vaultNotConfigured": "設定で Vault 名を設定してください",
+    "apiNotConfigured": "設定で API キーを設定してください",
+    "runningTask": "処理中",
+    "runningTasks": "処理中のタスク",
+    "connectionChecking": "接続確認中...",
+    "connectionConnected": "Obsidian に接続中",
+    "connectionDisconnected": "Obsidian が起動していません",
+    "openObsidian": "開く",
+    "confirmOpenObsidian": "Obsidian が起動していません。開きますか？",
+    "connectionError": "Obsidian に接続できませんでした。Obsidian が起動していて、Local REST API プラグインが有効になっていることを確認してください。",
+    "notClippable": "このページはクリップできません（HTTP/HTTPS のみ対応）",
+    "recentTasks": "履歴",
+    "processing": "処理中...",
+    "templateSet": "テンプレートセット",
+    "progress": {
+      "extracting": "ページ情報を取得中...",
+      "llmContent": "LLM で処理中...",
+      "llmTags": "タグを生成中...",
+      "saving": "Obsidian に保存中...",
+      "done": "完了"
+    }
+  },
+  "options": {
+    "title": "設定",
+    "saving": "保存中...",
+    "saved": "保存しました",
+    "saveError": "保存に失敗しました",
+    "tabs": {
+      "general": "全般",
+      "templates": "テンプレート",
+      "variables": "変数",
+      "llm": "LLM プロバイダ"
+    },
+    "general": {
+      "title": "全般",
+      "vault": "Obsidian Vault",
+      "vaultName": "Vault 名",
+      "vaultNamePlaceholder": "Obsidian の Vault 名を入力",
+      "vaultNameHint": "Obsidian に表示される Vault の名前",
+      "testConnection": "Vault を開く",
+      "browse": "参照",
+      "defaultTemplates": "デフォルトテンプレート",
+      "defaultWebTemplate": "Web テンプレート",
+      "defaultWebTemplateHint": "Web ページをクリップするときに使用するテンプレート",
+      "defaultYouTubeTemplate": "YouTube テンプレート",
+      "defaultYouTubeTemplateHint": "YouTube 動画をクリップするときに使用するテンプレート",
+      "noTemplate": "テンプレート未選択"
+    },
+    "shortcuts": {
+      "title": "キーボードショートカット",
+      "default": "デフォルトクリップ",
+      "defaultHint": "ページタイプ（Web/YouTube）に応じたデフォルトテンプレートでクリップ",
+      "shortcut1": "ショートカット 1",
+      "shortcut2": "ショートカット 2",
+      "shortcut3": "ショートカット 3",
+      "selectTemplate": "テンプレートを選択",
+      "clickToSet": "クリックしてショートカットを設定",
+      "pressKey": "ショートカットキーを入力..."
+    },
+    "obsidianApi": {
+      "title": "Obsidian Local REST API",
+      "enabled": "Local REST API を使用",
+      "enabledHint": "obsidian:// URI の代わりに HTTP 経由でノートを保存（Local REST API プラグインが必要）",
+      "apiKey": "API キー",
+      "apiKeyPlaceholder": "Local REST API プラグインの API キーを入力",
+      "apiKeyHint": "Obsidian 設定 > Local REST API > API Key で確認",
+      "port": "ポート",
+      "portHint": "デフォルト: 27123",
+      "insecureMode": "HTTP を使用（非推奨）",
+      "testConnection": "接続テスト",
+      "connectionSuccess": "接続成功！",
+      "connectionError": "接続失敗"
+    },
+    "importExport": {
+      "title": "設定のインポート/エクスポート",
+      "description": "設定をファイルにエクスポートするか、バックアップからインポートします。",
+      "export": "エクスポート",
+      "import": "インポート",
+      "confirmImport": "現在の設定がすべて置き換えられます。続行しますか？",
+      "invalidFile": "無効な設定ファイルです",
+      "importError": "設定のインポートに失敗しました"
+    },
+    "templates": {
+      "title": "テンプレート",
+      "sets": "テンプレートセット",
+      "addSet": "セットを追加",
+      "setName": "セット名",
+      "shortcut": "ショートカット",
+      "maxSetsReached": "カスタムセットは最大3つまでです",
+      "confirmDeleteSet": "このテンプレートセットを削除してもよろしいですか？",
+      "selectSet": "サイドバーからテンプレートセットを選択してください",
+      "web": "Web",
+      "youtube": "YouTube",
+      "newTemplate": "新規テンプレート",
+      "editTemplate": "テンプレートを編集",
+      "deleteConfirm": "このテンプレートを削除してもよろしいですか？",
+      "name": "名前",
+      "namePlaceholder": "テンプレート名",
+      "folder": "フォルダ",
+      "folderPlaceholder": "例: Clippings/{{domain}}",
+      "folderHint": "ノートを保存するフォルダパス",
+      "filename": "ファイル名",
+      "filenamePlaceholder": "例: {{title}}",
+      "filenameHint": "ノートのファイル名（.md 拡張子なし）",
+      "properties": "プロパティ",
+      "propertiesHint": "ノートの frontmatter プロパティ",
+      "propertyKey": "キー",
+      "propertyValue": "値",
+      "propertyType": "タイプ",
+      "addProperty": "プロパティを追加",
+      "moveUp": "上に移動",
+      "moveDown": "下に移動",
+      "propertyTypes": {
+        "text": "テキスト",
+        "list": "リスト",
+        "checkbox": "チェックボックス",
+        "date": "日付",
+        "datetime": "日時",
+        "number": "数値",
+        "tags": "タグ"
+      },
+      "addItem": "アイテムを追加...",
+      "requiredProperty": "必須プロパティ（削除不可）",
+      "content": "コンテンツ",
+      "contentPlaceholder": "ノートの内容テンプレート...",
+      "contentHint": "ノートの本文（LLM 無効時に使用）",
+      "llm": "LLM 処理",
+      "useLLM": "LLM を使用",
+      "useLLMHint": "このテンプレートで LLM 処理を有効にする",
+      "llmGenerateContent": "コンテンツを生成",
+      "llmGenerateContentHint": "LLM でノートの内容を生成・要約する",
+      "llmPrompt": "コンテンツプロンプト",
+      "llmPromptPlaceholder": "LLM に送信するプロンプトを入力...",
+      "llmPromptHint": "コンテンツ生成用のプロンプトテンプレート。{{content}} または {{transcript}} でページ内容を含める。",
+      "llmGenerateTags": "タグを生成",
+      "llmGenerateTagsHint": "LLM でノートのタグを自動生成する",
+      "llmTagsPrompt": "タグプロンプト",
+      "llmTagsPromptPlaceholder": "タグ生成用のプロンプトを入力...",
+      "llmTagsPromptHint": "タグ生成用のプロンプトテンプレート。LLM はタグの JSON 配列を返す必要があります。",
+      "llmProviderOverride": "プロバイダ",
+      "llmProviderOverrideHint": "デフォルトプロバイダ: {{provider}}",
+      "useDefaultProvider": "デフォルトプロバイダを使用",
+      "llmModelOverride": "モデル",
+      "llmModelOverrideHint": "{{provider}} のモデルを選択",
+      "useDefaultModel": "デフォルトモデルを使用",
+      "empty": "テンプレートが定義されていません",
+      "cannotDeleteDefault": "デフォルトテンプレートは削除できません"
+    },
+    "variables": {
+      "title": "テンプレート変数",
+      "usage": "変数の使い方",
+      "description": "これらの変数はフォルダパス、ファイル名、プロンプトで使用できます。{{variableName}} の形式で使用してください。",
+      "example": "例",
+      "exampleUsage": "フォルダパス: Clippings/{{domain}}/{{date}}",
+      "builtIn": "組み込み変数",
+      "builtInWeb": "Web 変数",
+      "builtInYouTube": "YouTube 変数",
+      "custom": "カスタム変数",
+      "customEmpty": "カスタム変数が定義されていません",
+      "customAdd": "変数を追加",
+      "customName": "名前",
+      "customNamePlaceholder": "variableName",
+      "customValue": "値",
+      "customValuePlaceholder": "デフォルト値",
+      "customDelete": "削除",
+      "customNameError": "この変数名は既に存在します",
+      "customNameInvalid": "英数字とアンダースコアのみ使用可能",
+      "vars": {
+        "title": {
+          "name": "title",
+          "description": "ページタイトル"
+        },
+        "url": {
+          "name": "url",
+          "description": "ページの完全なURL"
+        },
+        "domain": {
+          "name": "domain",
+          "description": "ドメイン名（例: example.com）"
+        },
+        "description": {
+          "name": "description",
+          "description": "ページの説明文（メタタグから取得）"
+        },
+        "author": {
+          "name": "author",
+          "description": "ページの著者（メタタグから取得）"
+        },
+        "published": {
+          "name": "published",
+          "description": "公開日（メタタグから取得）"
+        },
+        "date": {
+          "name": "date",
+          "description": "現在の日付（YYYY-MM-DD）"
+        },
+        "time": {
+          "name": "time",
+          "description": "現在の時刻（HH:mm）"
+        },
+        "datetime": {
+          "name": "datetime",
+          "description": "日時（YYYY-MM-DD HH:mm）"
+        },
+        "year": {
+          "name": "year",
+          "description": "現在の年（YYYY）"
+        },
+        "month": {
+          "name": "month",
+          "description": "現在の月（MM）"
+        },
+        "day": {
+          "name": "day",
+          "description": "現在の日（DD）"
+        },
+        "selection": {
+          "name": "selection",
+          "description": "ページ上の選択テキスト"
+        },
+        "content": {
+          "name": "content",
+          "description": "ページのメインコンテンツ"
+        },
+        "transcript": {
+          "name": "transcript",
+          "description": "YouTube 動画のトランスクリプト"
+        },
+        "channel": {
+          "name": "channel",
+          "description": "YouTube チャンネル名"
+        },
+        "videoId": {
+          "name": "videoId",
+          "description": "YouTube 動画 ID"
+        },
+        "duration": {
+          "name": "duration",
+          "description": "YouTube 動画の長さ"
+        }
+      }
+    },
+    "llm": {
+      "provider": "LLM プロバイダ",
+      "settings": "設定",
+      "providers": {
+        "openai": "OpenAI",
+        "azure-openai": "Azure OpenAI",
+        "claude": "Claude",
+        "gemini": "Gemini",
+        "ollama": "Ollama"
+      },
+      "dev": "開発中",
+      "default": "デフォルト",
+      "setAsDefault": "デフォルトプロバイダに設定",
+      "inDevelopment": "このプロバイダは現在開発中のため、正常に動作しない場合があります。",
+      "apiKey": "API キー",
+      "apiKeyPlaceholder": "API キーを入力",
+      "model": "モデル",
+      "availableModels": "利用可能なモデル",
+      "defaultModelLabel": "デフォルトモデル",
+      "selectModel": "モデルを選択",
+      "optional": "任意",
+      "openaiApiKeyHint": "platform.openai.com から API キーを取得",
+      "baseUrl": "ベース URL",
+      "baseUrlHint": "カスタム API エンドポイント（デフォルトは空欄）",
+      "azureEndpoint": "エンドポイント",
+      "azureEndpointHint": "Azure OpenAI リソースのエンドポイント",
+      "azureApiVersion": "API バージョン",
+      "azureModelHint": "デプロイメント名を追加してください（例: my-gpt4o-deployment）",
+      "claudeApiKeyHint": "console.anthropic.com から API キーを取得",
+      "ollamaEndpoint": "エンドポイント",
+      "ollamaEndpointHint": "Ollama サーバーのエンドポイント（デフォルト: http://localhost:11434）",
+      "defaultModels": "デフォルトモデル",
+      "customModels": "カスタムモデル",
+      "addModel": "追加",
+      "addModelPlaceholder": "モデル名を入力..."
+    }
+  },
+  "content": {
+    "capturing": "ページを取得中...",
+    "captured": "ページを取得しました",
+    "captureError": "ページの取得に失敗しました"
+  },
+  "toast": {
+    "success": "Obsidian に保存しました",
+    "error": "保存に失敗しました: {{error}}"
+  },
+  "contextMenu": {
+    "clipPage": "Obsidian にクリップ",
+    "clipSelection": "選択範囲を Obsidian にクリップ"
+  }
+}

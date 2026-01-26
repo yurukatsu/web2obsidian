@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+#root > div {
+  min-height: 100%;
+}
+
+/* Custom utility classes if needed */
+@layer components {
+  .btn-primary-custom {
+    @apply btn btn-primary;
+  }
+}
