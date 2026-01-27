@@ -136,6 +136,9 @@ export async function saveToObsidian(
 /**
  * Save a note to Obsidian using obsidian://new URI scheme.
  * This works without the Local REST API plugin but cannot report success/failure.
+ *
+ * Uses chrome.scripting.executeScript to inject an anchor click in the page context,
+ * which is more reliable than chrome.tabs.update for custom protocol URIs.
  */
 export async function saveToObsidianViaUri(
   params: SaveToObsidianViaUriParams
@@ -153,14 +156,26 @@ export async function saveToObsidianViaUri(
   console.log("[Web2Obsidian] Saving to Obsidian via URI scheme");
 
   try {
-    // Service worker has no DOM, use chrome.tabs.update to open the URI
     const tabs = await chrome.tabs.query({
       active: true,
       currentWindow: true,
     });
-    if (tabs[0]?.id) {
-      await chrome.tabs.update(tabs[0].id, { url: uri });
+    const tabId = tabs[0]?.id;
+
+    if (tabId) {
+      // Inject a script into the page context to trigger the protocol handler
+      // via an anchor click — same pattern as openObsidianVault() in page context
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (u: string) => {
+          const a = document.createElement("a");
+          a.href = u;
+          a.click();
+        },
+        args: [uri],
+      });
     } else {
+      // Fallback: create a new tab (less reliable for custom protocols)
       await chrome.tabs.create({ url: uri, active: false });
     }
     return { success: true, path: filePath };
@@ -197,8 +212,26 @@ export async function openObsidianVaultFromServiceWorker(
     ? `obsidian://open?vault=${encodeURIComponent(vaultName)}`
     : "obsidian://open";
 
-  // Use chrome.tabs.create to open the URI
-  await chrome.tabs.create({ url: uri, active: false });
+  // Inject anchor click into the active tab for reliable protocol handling
+  const tabs = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  const tabId = tabs[0]?.id;
+
+  if (tabId) {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (u: string) => {
+        const a = document.createElement("a");
+        a.href = u;
+        a.click();
+      },
+      args: [uri],
+    });
+  } else {
+    await chrome.tabs.create({ url: uri, active: false });
+  }
 }
 
 /**
