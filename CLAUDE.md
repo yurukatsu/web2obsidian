@@ -1,169 +1,111 @@
-# CLAUDE.md - Web2Obsidian Development Guide
+# CLAUDE.md
 
-This file serves as a reference for Claude Code when resuming development.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Web2Obsidian is a Chrome extension for clipping web pages and YouTube videos to Obsidian with AI-powered summarization.
-
-## Directory Structure
-
-```
-src/
-├── background/          # Service worker (background script)
-│   └── index.ts         # Message handlers, context menus, clip task processing
-├── components/          # Shared React components
-│   ├── index.ts         # Component exports
-│   ├── icons.tsx        # Icon components (GearIcon, etc.)
-│   ├── Alert.tsx        # Alert component
-│   ├── ThemeToggle.tsx  # Dark/Light theme toggle
-│   ├── LanguageToggle.tsx # Language toggle (flag emojis)
-│   ├── ProgressStep.tsx # Progress step indicator
-│   ├── TaskItem.tsx     # Task history item
-│   └── RunningTaskItem.tsx # Running task with progress
-├── content/             # Content script
-│   └── index.ts         # Page extraction, keyboard shortcuts, toast
-├── options/             # Settings page
-│   └── Options.tsx      # Main settings component (~2000 lines)
-├── popup/               # Popup UI
-│   └── Popup.tsx        # Main popup component
-├── services/            # API services
-│   ├── llm.ts           # LLM API calls (OpenAI, Azure, Ollama)
-│   └── obsidian-api.ts  # Obsidian Local REST API client
-├── types/               # TypeScript type definitions
-│   ├── llm.ts           # LLM provider types
-│   ├── template.ts      # Template types
-│   └── task.ts          # Task/history types
-├── i18n/
-│   ├── index.ts         # i18next configuration
-│   └── locales/
-│       ├── en.json      # English translations
-│       └── ja.json      # Japanese translations
-├── utils/
-│   └── index.ts         # Template processing, utilities
-└── styles/
-    └── globals.css      # TailwindCSS + DaisyUI styles
-```
-
-## Key Features
-
-### Implemented
-- **Web Page Clipping**: Extract content via Readability, save to Obsidian
-- **YouTube Clipping**: Extract video metadata and transcripts
-- **LLM Integration**: Content summarization and tag generation
-- **Template System**: Customizable templates with variables
-- **Template Sets**: Multiple configurations with keyboard shortcuts
-- **Context Menu**: Right-click to clip with template selection
-- **Connection Status**: Real-time Obsidian connection indicator in popup
-- **Auto-open Obsidian**: Prompt to open when not running
-
-### In Development
-- Claude API integration
-- Gemini API integration
-
-## Key Files
-
-### `src/background/index.ts`
-Service worker handling:
-- Context menu creation and clicks
-- Message handlers (CLIP_PAGE, CHECK_OBSIDIAN_CONNECTION, etc.)
-- Clip task processing with progress updates
-- Obsidian connection checking and retry logic
-
-### `src/content/index.ts`
-Content script handling:
-- Page info extraction (Readability for content)
-- YouTube transcript extraction
-- Keyboard shortcut handling
-- Toast notifications
-
-### `src/services/obsidian-api.ts`
-Obsidian Local REST API client:
-- `saveToObsidian()`: Save note via PUT /vault/{path}
-- `testObsidianConnection()`: Check API connectivity
-- `openObsidianVaultFromServiceWorker()`: Open vault via URI scheme
-
-### `src/types/llm.ts`
-LLM provider types:
-- `LLMProviderType`: "openai" | "azure-openai" | "claude" | "gemini" | "ollama"
-- `IN_DEVELOPMENT_PROVIDERS`: ["claude", "gemini"]
-- Provider settings interfaces
-
-### `src/types/template.ts`
-Template types:
-- `Template`: Structure with folder, filename, properties, content, LLM settings
-- `TemplateSet`: Collection of templates with keyboard shortcut
-- `PropertyInputType`: "text" | "list" | "checkbox" | "date" | "datetime" | "number" | "tags"
-
-## Message Types
-
-Communication between popup/content and background:
-
-| Message | Description |
-|---------|-------------|
-| `CLIP_PAGE` | Start clip task (from popup) |
-| `CLIP_WITH_CONNECTION_CHECK` | Clip with connection check (from content script) |
-| `CHECK_OBSIDIAN_CONNECTION` | Check if Obsidian is connected |
-| `OPEN_OBSIDIAN` | Open Obsidian vault |
-| `GET_TASKS` | Get task history |
-| `TASK_UPDATE` | Task progress update (broadcast) |
-
-## Storage
-
-| Key | Storage | Description |
-|-----|---------|-------------|
-| `vaultName` | sync | Obsidian vault name |
-| `obsidianApiSettings` | sync | API key, port, insecure mode |
-| `llmSettings` | sync | LLM provider settings |
-| `language` | sync | UI language (en/ja) |
-| `theme` | sync | UI theme (light/dark) |
-| `templateSettings` | local | Template sets and defaults |
-| `taskHistory` | local | Recent clip tasks |
+Web2Obsidian is a Chrome extension (Manifest V3) for clipping web pages and YouTube videos to Obsidian with AI-powered summarization. Built with React 18, TypeScript, Vite, and CRXJS.
 
 ## Commands
 
 ```bash
-npm run dev      # Development build (watch)
-npm run build    # Production build
-npm run test     # Run tests
-npm run lint     # ESLint
+npm run dev           # Vite dev server with HMR (port 5173)
+npm run build         # tsc + vite build → dist/
+npm run test          # Vitest in watch mode
+npm run test -- --run # Single test run (used by pre-push hook)
+npm run test:coverage # Coverage report (v8: text/json/html)
+npm run lint          # ESLint (ts,tsx files)
+npm run lint:fix      # ESLint with auto-fix
+npm run format        # Prettier write
+npm run type-check    # tsc --noEmit
 ```
 
-## Architecture Notes
+To run a single test file: `npx vitest run src/utils/index.test.ts`
 
-1. **Connection Flow**:
-   - Popup checks connection on load
-   - Shows indicator (green/red/yellow dot)
-   - Disables clip button if not connected
-   - Context menu/shortcuts prompt to open Obsidian if not connected
+## Architecture
 
-2. **Clip Flow**:
-   - Check connection → Extract page info → LLM processing (optional) → Save to Obsidian
-   - Progress updates sent via `TASK_UPDATE` message
-   - Toast notification on completion
+### Extension Entry Points
 
-3. **Template Processing**:
-   - Variables replaced: `{{title}}`, `{{url}}`, `{{content}}`, etc.
-   - Properties converted to YAML frontmatter
-   - LLM can generate content and/or tags
+The manifest is defined programmatically in `src/manifest.ts` (CRXJS converts it to JSON during build).
 
-## Localization
+| Entry Point | Files | Purpose |
+|-------------|-------|---------|
+| Popup | `src/popup/index.html` → `main.tsx` → `Popup.tsx` | Extension toolbar popup |
+| Options | `src/options/index.html` → `main.tsx` → `Options.tsx` | Full-page settings (open_in_tab) |
+| Background | `src/background/index.ts` | Service worker: message routing, task processing, context menus |
+| Content | `src/content/index.ts` | Injected on all pages: extraction, shortcuts, toast |
 
-Update both `en.json` and `ja.json` when adding UI text:
-```json
-// Structure
-{
-  "popup": { ... },
-  "options": { ... },
-  "toast": { ... },
-  "contextMenu": { ... }
-}
+### Message-Based Communication
+
+All cross-context communication uses `chrome.runtime.sendMessage()` with a `type` field. Background service worker is the central hub.
+
+Key message types: `CLIP_PAGE`, `CLIP_WITH_CONNECTION_CHECK`, `CHECK_OBSIDIAN_CONNECTION`, `OPEN_OBSIDIAN`, `GET_TASKS`, `TASK_UPDATE` (broadcast from background to popup).
+
+**Async pattern**: Handlers return `true` to keep the message channel open, then call `sendResponse()` after async work completes. Background broadcasts task progress via `TASK_UPDATE` messages (errors swallowed since popup may be closed).
+
+### Clip Task Lifecycle
+
+```
+startClipTask() → creates task in storage → async runClipTask():
+  extracting → [llm_content] → [llm_tags] → saving → done
 ```
 
-## Tech Stack
+Each step update broadcasts a `TASK_UPDATE` message. Task history is capped at 10 items in local storage.
 
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite + CRXJS
-- **Styling**: TailwindCSS + DaisyUI
-- **i18n**: i18next
-- **Extension**: Chrome Extension Manifest V3
+### Storage Split
+
+- **`chrome.storage.sync`**: Settings (vault, API keys, LLM config, language, theme) — syncs across devices, 100KB limit
+- **`chrome.storage.local`**: Template sets and task history — larger data, device-local
+- Migration logic in `src/background/index.ts` handles moving templates from sync→local (backward compat).
+
+### Content Extraction
+
+Two-layer approach: Defuddle library (primary, superior extraction) → basic DOM fallback. Markdown conversion via Turndown. YouTube pages get separate transcript extraction.
+
+### LLM Provider System
+
+- Types in `src/types/llm.ts`: `LLMProviderType` = `"openai" | "azure-openai" | "claude" | "gemini" | "ollama"`
+- `IN_DEVELOPMENT_PROVIDERS`: `["claude", "gemini"]` — UI shows these as disabled
+- `src/services/llm.ts`: Single `callLLM()` dispatcher routes to provider-specific functions
+- Templates can override the default provider/model
+
+### Template System
+
+- Template variables: `{{title}}`, `{{url}}`, `{{content}}`, `{{domain}}`, `{{date}}`, `{{time}}`, etc.
+- Template sets bundle web + YouTube templates together with a keyboard shortcut
+- Properties are converted to YAML frontmatter
+- Processing logic in `src/utils/index.ts`
+
+### i18n Dual System
+
+- React components: `useTranslation()` hook via i18next provider
+- Background service worker: Direct JSON imports + `getLocalizedMessage()` helper (avoids async overhead)
+- Locales: `src/i18n/locales/en.json` and `ja.json` — **always update both** when adding UI text
+
+## Path Aliases
+
+Configured in `vite.config.ts` and `tsconfig.json`:
+- `@/*` → `src/*`, `@components/*` → `src/components/*`, `@utils/*` → `src/utils/*`, `@types/*` → `src/types/*`, `@i18n/*` → `src/i18n/*`, `@hooks/*` → `src/hooks/*`
+
+## Testing
+
+- Framework: Vitest with jsdom environment
+- Chrome API mock: `src/test/setup.ts` stubs `chrome.*` globals (storage, runtime, tabs, scripting)
+- Custom render: `src/test/utils.tsx` provides `renderWithProviders()` wrapping components with i18next
+- Tests colocated: `*.test.ts` next to source files
+
+## Git Hooks (Lefthook)
+
+- **Pre-commit** (parallel): lint with auto-fix, format with auto-fix, typecheck (`tsc --noEmit`)
+- **Pre-push**: full test suite (`npm run test -- --run`)
+
+## Styling
+
+TailwindCSS + DaisyUI. Custom theme configured in `tailwind.config.js` with purple primary (`#8766DA`). Global styles in `src/styles/globals.css`. Tailwind class sorting via `prettier-plugin-tailwindcss`.
+
+## Key Conventions
+
+- Console logs prefixed with `[Web2Obsidian]` for filtering
+- ESLint allows `console.warn()` and `console.error()` only (no `console.log` in production)
+- Unused variables use `_` prefix (ESLint configured)
+- `@typescript-eslint/no-explicit-any` is warning level, not error

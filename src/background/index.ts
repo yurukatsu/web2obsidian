@@ -177,10 +177,14 @@ async function failTask(taskId: string, error: string): Promise<void> {
 // Extension Initialization
 // ============================================================================
 
+// Guard to prevent storage.onChanged from re-creating context menus during initial setup
+let isInitializing = false;
+
 // Handle extension installation
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Web2Obsidian extension installed");
 
+  isInitializing = true;
   try {
     // Initialize default template settings if not exists (using local storage for large data)
     const localSettings = await chrome.storage.local.get(["templateSettings"]);
@@ -208,6 +212,8 @@ chrome.runtime.onInstalled.addListener(async () => {
     await createContextMenus();
   } catch (error) {
     console.error("Web2Obsidian: Failed to initialize settings:", error);
+  } finally {
+    isInitializing = false;
   }
 });
 
@@ -436,6 +442,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // Update context menus when language or template settings change
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (isInitializing) return;
   if (areaName === "sync" && changes.language) {
     await createContextMenus();
   }
