@@ -296,6 +296,30 @@ export function useOptionsState(
     saveToSyncStorage({ obsidianApiSettings });
   }, [obsidianApiSettings, saveToSyncStorage]);
 
+  // Flush pending saves immediately when leaving the page
+  useEffect(() => {
+    const flushPendingSaves = () => {
+      const syncData = pendingSyncDataRef.current;
+      const localData = pendingLocalDataRef.current;
+
+      if (Object.keys(syncData).length > 0) {
+        if (syncSaveTimeoutRef.current)
+          clearTimeout(syncSaveTimeoutRef.current);
+        pendingSyncDataRef.current = {};
+        chrome.storage.sync.set(syncData);
+      }
+      if (Object.keys(localData).length > 0) {
+        if (localSaveTimeoutRef.current)
+          clearTimeout(localSaveTimeoutRef.current);
+        pendingLocalDataRef.current = {};
+        chrome.storage.local.set(localData);
+      }
+    };
+
+    window.addEventListener("beforeunload", flushPendingSaves);
+    return () => window.removeEventListener("beforeunload", flushPendingSaves);
+  }, []);
+
   // ==========================================================================
   // Built-in variables
   // ==========================================================================
