@@ -1,6 +1,6 @@
 {
   "name": "web2obsidian",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Chrome extension to capture web pages and save them to Obsidian with AI-powered summarization",
   "type": "module",
   "scripts": {

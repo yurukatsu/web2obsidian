@@ -2,6 +2,7 @@
 // https://github.com/coddingtonbear/obsidian-local-rest-api
 
 export interface ObsidianApiSettings {
+  enabled: boolean; // Use Local REST API (false = obsidian:// URI only)
   apiKey: string;
   port: number;
   insecureMode: boolean; // Use HTTP instead of HTTPS (not recommended)
@@ -13,6 +14,7 @@ export const OBSIDIAN_API_HTTP_PORT = 27123;
 
 export function createDefaultObsidianApiSettings(): ObsidianApiSettings {
   return {
+    enabled: true, // Default to using Local REST API
     apiKey: "",
     port: OBSIDIAN_API_HTTPS_PORT, // Default to HTTPS port
     insecureMode: false,
@@ -24,6 +26,13 @@ export interface SaveToObsidianParams {
   filename: string;
   content: string;
   settings: ObsidianApiSettings;
+}
+
+export interface SaveToObsidianViaUriParams {
+  vaultName: string;
+  folder: string;
+  filename: string;
+  content: string;
 }
 
 export interface ObsidianApiResponse {
@@ -117,6 +126,46 @@ export async function saveToObsidian(
       };
     }
 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Save a note to Obsidian using obsidian://new URI scheme.
+ * This works without the Local REST API plugin but cannot report success/failure.
+ */
+export async function saveToObsidianViaUri(
+  params: SaveToObsidianViaUriParams
+): Promise<ObsidianApiResponse> {
+  const { vaultName, folder, filename, content } = params;
+
+  // Construct file path (ensure .md extension)
+  const filenameWithExt = filename.endsWith(".md")
+    ? filename
+    : `${filename}.md`;
+  const filePath = folder ? `${folder}/${filenameWithExt}` : filenameWithExt;
+
+  const uri = `obsidian://new?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(filePath)}&content=${encodeURIComponent(content)}`;
+
+  console.log("[Web2Obsidian] Saving to Obsidian via URI scheme");
+
+  try {
+    // Service worker has no DOM, use chrome.tabs.update to open the URI
+    const tabs = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tabs[0]?.id) {
+      await chrome.tabs.update(tabs[0].id, { url: uri });
+    } else {
+      await chrome.tabs.create({ url: uri, active: false });
+    }
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error("[Web2Obsidian] Failed to save via URI:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

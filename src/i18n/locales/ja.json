@@ -32,6 +32,8 @@
     "notClippable": "このページはクリップできません（HTTP/HTTPS のみ対応）",
     "recentTasks": "履歴",
     "processing": "処理中...",
+    "cancelTask": "キャンセル",
+    "cancelled": "キャンセル済み",
     "templateSet": "テンプレートセット",
     "progress": {
       "extracting": "ページ情報を取得中...",
@@ -305,6 +307,7 @@
   },
   "toast": {
     "success": "Obsidian に保存しました",
+    "savedViaUri": "Obsidian に保存しました（URI 経由）",
     "error": "保存に失敗しました: {{error}}"
   },
   "contextMenu": {

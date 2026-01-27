@@ -32,6 +32,8 @@
     "notClippable": "This page cannot be clipped (only HTTP/HTTPS pages are supported)",
     "recentTasks": "Recent Tasks",
     "processing": "Processing...",
+    "cancelTask": "Cancel",
+    "cancelled": "Cancelled",
     "templateSet": "Template Set",
     "progress": {
       "extracting": "Extracting page info...",
@@ -305,6 +307,7 @@
   },
   "toast": {
     "success": "Saved to Obsidian",
+    "savedViaUri": "Saved to Obsidian (via URI)",
     "error": "Failed to save: {{error}}"
   },
   "contextMenu": {

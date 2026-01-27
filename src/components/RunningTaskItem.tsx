@@ -4,9 +4,10 @@ import { ProgressStep, StepStatus } from "./ProgressStep";
 interface RunningTaskItemProps {
   task: ClipTask;
   t: (key: string) => string;
+  onCancel: (taskId: string) => void;
 }
 
-export function RunningTaskItem({ task, t }: RunningTaskItemProps) {
+export function RunningTaskItem({ task, t, onCancel }: RunningTaskItemProps) {
   const getStepStatus = (step: TaskStep): StepStatus => {
     if (!task.step) return "pending";
 
@@ -52,6 +53,24 @@ export function RunningTaskItem({ task, t }: RunningTaskItemProps) {
               {task.pageInfo.domain}
             </p>
           </div>
+          <button
+            className="btn btn-ghost btn-xs shrink-0"
+            onClick={() => onCancel(task.id)}
+            title={t("popup.cancelTask")}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
         </div>
         <div className="space-y-2">
           <ProgressStep

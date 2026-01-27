@@ -42,6 +42,11 @@ export function TaskItem({ task, t }: TaskItemProps) {
               <XIcon className="h-3 w-3 text-error-content" />
             </span>
           )}
+          {task.status === "cancelled" && (
+            <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning">
+              <XIcon className="h-3 w-3 text-warning-content" />
+            </span>
+          )}
           {task.status === "pending" && (
             <span className="mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-base-300"></span>
           )}
@@ -71,6 +76,13 @@ export function TaskItem({ task, t }: TaskItemProps) {
             {task.status === "running" && task.step && (
               <p className="mt-1 text-xs text-primary">
                 {getStepLabel(task.step)}
+              </p>
+            )}
+
+            {/* Cancelled message */}
+            {task.status === "cancelled" && (
+              <p className="mt-1 text-xs text-warning">
+                {t("popup.cancelled")}
               </p>
             )}
 

@@ -1,6 +1,11 @@
 // Task management types for background processing
 
-export type TaskStatus = "pending" | "running" | "success" | "error";
+export type TaskStatus =
+  | "pending"
+  | "running"
+  | "success"
+  | "error"
+  | "cancelled";
 export type TaskStep =
   | "extracting"
   | "llm_content"
