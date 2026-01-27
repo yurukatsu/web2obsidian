@@ -70,7 +70,10 @@ export function useOptionsState(
     {}
   );
   const isInitialized = useRef(false);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const syncSaveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const localSaveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const pendingSyncDataRef = useRef<Record<string, unknown>>({});
+  const pendingLocalDataRef = useRef<Record<string, unknown>>({});
 
   // ==========================================================================
   // Settings Load
@@ -204,14 +207,22 @@ export function useOptionsState(
   // ==========================================================================
 
   const saveToSyncStorage = useCallback((data: Record<string, unknown>) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    // Accumulate pending changes so rapid updates don't overwrite each other
+    pendingSyncDataRef.current = { ...pendingSyncDataRef.current, ...data };
+
+    if (syncSaveTimeoutRef.current) {
+      clearTimeout(syncSaveTimeoutRef.current);
     }
 
-    saveTimeoutRef.current = setTimeout(() => {
+    syncSaveTimeoutRef.current = setTimeout(() => {
+      const pendingData = pendingSyncDataRef.current;
+      pendingSyncDataRef.current = {};
       setSaveStatus("saving");
-      console.log("[Web2Obsidian] Saving to sync storage:", Object.keys(data));
-      chrome.storage.sync.set(data, () => {
+      console.log(
+        "[Web2Obsidian] Saving to sync storage:",
+        Object.keys(pendingData)
+      );
+      chrome.storage.sync.set(pendingData, () => {
         if (chrome.runtime.lastError) {
           console.error("Failed to save:", chrome.runtime.lastError);
           setSaveStatus("error");
@@ -225,21 +236,29 @@ export function useOptionsState(
   }, []);
 
   const saveToLocalStorage = useCallback((data: Record<string, unknown>) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    // Accumulate pending changes so rapid updates don't overwrite each other
+    pendingLocalDataRef.current = { ...pendingLocalDataRef.current, ...data };
+
+    if (localSaveTimeoutRef.current) {
+      clearTimeout(localSaveTimeoutRef.current);
     }
 
-    saveTimeoutRef.current = setTimeout(() => {
+    localSaveTimeoutRef.current = setTimeout(() => {
+      const pendingData = pendingLocalDataRef.current;
+      pendingLocalDataRef.current = {};
       setSaveStatus("saving");
-      console.log("[Web2Obsidian] Saving to local storage:", Object.keys(data));
-      if (data.templateSettings) {
-        const ts = data.templateSettings as TemplateSettings;
+      console.log(
+        "[Web2Obsidian] Saving to local storage:",
+        Object.keys(pendingData)
+      );
+      if (pendingData.templateSettings) {
+        const ts = pendingData.templateSettings as TemplateSettings;
         console.log("[Web2Obsidian] Template sets being saved:", {
           sets: ts.sets?.map((s) => s.name),
           defaultSetId: ts.defaultSetId,
         });
       }
-      chrome.storage.local.set(data, () => {
+      chrome.storage.local.set(pendingData, () => {
         if (chrome.runtime.lastError) {
           console.error("Failed to save:", chrome.runtime.lastError);
           setSaveStatus("error");
