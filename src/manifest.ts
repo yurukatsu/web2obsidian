@@ -5,7 +5,7 @@ export default defineManifest({
   name: "Web2Obsidian",
   description:
     "Capture web pages and save them to Obsidian with AI-powered summarization",
-  version: "0.1.1",
+  version: "0.1.2",
   icons: {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
