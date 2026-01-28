@@ -42,6 +42,7 @@ export default defineManifest({
     "scripting",
     "notifications",
     "contextMenus",
+    "clipboardWrite",
   ],
   host_permissions: ["<all_urls>"],
 });

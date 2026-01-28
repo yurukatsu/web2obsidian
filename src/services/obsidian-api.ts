@@ -137,8 +137,13 @@ export async function saveToObsidian(
  * Save a note to Obsidian using obsidian://new URI scheme.
  * This works without the Local REST API plugin but cannot report success/failure.
  *
- * Uses chrome.scripting.executeScript to inject an anchor click in the page context,
- * which is more reliable than chrome.tabs.update for custom protocol URIs.
+ * Uses clipboard-based content delivery (Obsidian 1.7.0+):
+ * 1. Copy note content to clipboard via injected script
+ * 2. Open obsidian://new URI with &clipboard flag
+ * 3. Obsidian reads content from clipboard
+ *
+ * Falls back to URI-embedded content if clipboard write fails,
+ * though large content may be silently truncated by the browser.
  */
 export async function saveToObsidianViaUri(
   params: SaveToObsidianViaUriParams
@@ -151,7 +156,8 @@ export async function saveToObsidianViaUri(
     : `${filename}.md`;
   const filePath = folder ? `${folder}/${filenameWithExt}` : filenameWithExt;
 
-  const uri = `obsidian://new?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(filePath)}&content=${encodeURIComponent(content)}`;
+  // Build base URI without content — content is delivered via clipboard
+  const baseUri = `obsidian://new?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(filePath)}`;
 
   console.log("[Web2Obsidian] Saving to Obsidian via URI scheme");
 
@@ -163,19 +169,54 @@ export async function saveToObsidianViaUri(
     const tabId = tabs[0]?.id;
 
     if (tabId) {
-      // Inject a script into the page context to trigger the protocol handler
-      // via an anchor click — same pattern as openObsidianVault() in page context
-      await chrome.scripting.executeScript({
+      // Inject a script that copies content to clipboard then opens the URI.
+      // Obsidian 1.7.0+ reads content from clipboard when &clipboard is present.
+      const results = await chrome.scripting.executeScript({
         target: { tabId },
-        func: (u: string) => {
+        func: async (noteContent: string, uri: string) => {
+          let clipboardOk = false;
+
+          // Try Clipboard API
+          try {
+            await navigator.clipboard.writeText(noteContent);
+            clipboardOk = true;
+          } catch {
+            // Fallback: textarea + execCommand('copy')
+            try {
+              const ta = document.createElement("textarea");
+              ta.value = noteContent;
+              ta.style.position = "fixed";
+              ta.style.opacity = "0";
+              document.body.appendChild(ta);
+              ta.select();
+              clipboardOk = document.execCommand("copy");
+              document.body.removeChild(ta);
+            } catch {
+              clipboardOk = false;
+            }
+          }
+
+          // Open Obsidian URI
+          const finalUri = clipboardOk
+            ? uri + "&clipboard"
+            : uri + "&content=" + encodeURIComponent(noteContent);
+
           const a = document.createElement("a");
-          a.href = u;
+          a.href = finalUri;
           a.click();
+
+          return clipboardOk;
         },
-        args: [uri],
+        args: [content, baseUri],
       });
+
+      const usedClipboard = results?.[0]?.result;
+      console.log(
+        `[Web2Obsidian] URI save ${usedClipboard ? "via clipboard" : "via URI content (legacy fallback)"}`
+      );
     } else {
-      // Fallback: create a new tab (less reliable for custom protocols)
+      // No active tab — fall back to content in URI (may be truncated)
+      const uri = baseUri + `&content=${encodeURIComponent(content)}`;
       await chrome.tabs.create({ url: uri, active: false });
     }
     return { success: true, path: filePath };
