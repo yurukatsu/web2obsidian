@@ -94,7 +94,11 @@ async function extractYouTubeTranscript(videoId: string): Promise<string> {
         mainWorldCaptions.length,
         "caption tracks from MAIN world"
       );
-      return await fetchAndParseCaption(mainWorldCaptions);
+      const transcript = await fetchAndParseCaption(mainWorldCaptions);
+      if (transcript) return transcript;
+      console.log(
+        "[Web2Obsidian] MAIN world captions returned empty, trying next strategy..."
+      );
     }
 
     // Step 2: Try DOM script tags
@@ -106,10 +110,16 @@ async function extractYouTubeTranscript(videoId: string): Promise<string> {
         domCaptions.length,
         "caption tracks from DOM script tags"
       );
-      return await fetchAndParseCaption(domCaptions);
+      const transcript = await fetchAndParseCaption(domCaptions);
+      if (transcript) return transcript;
+      console.log(
+        "[Web2Obsidian] DOM captions returned empty, trying next strategy..."
+      );
     }
 
     // Step 3: Fetch page HTML and parse captions
+    // This makes a separate HTTP request which may return caption URLs
+    // that work without the user's session cookies.
     console.log("[Web2Obsidian] Trying fetch-based extraction...");
     const fetchCaptions = await extractCaptionsViaFetch(videoId);
     if (fetchCaptions && fetchCaptions.length > 0) {
@@ -118,7 +128,11 @@ async function extractYouTubeTranscript(videoId: string): Promise<string> {
         fetchCaptions.length,
         "caption tracks via fetch"
       );
-      return await fetchAndParseCaption(fetchCaptions);
+      const transcript = await fetchAndParseCaption(fetchCaptions);
+      if (transcript) return transcript;
+      console.log(
+        "[Web2Obsidian] Fetch captions returned empty, trying next strategy..."
+      );
     }
 
     // Step 4: InnerTube API
