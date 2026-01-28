@@ -69,105 +69,61 @@ export async function getYouTubeInfo(): Promise<YouTubeInfo | null> {
 }
 
 /**
- * Extract transcript from YouTube video
- * Uses InnerTube API approach (same as youtube-transcript-api Python library)
+ * Extract transcript from YouTube video.
+ *
+ * Strategy (ordered by reliability):
+ * 1. Read window.ytInitialPlayerResponse via MAIN world injection
+ *    (works for SPA navigations where script tag content is stale)
+ * 2. Parse <script> tags in the DOM for ytInitialPlayerResponse
+ *    (works on initial page load, no network request)
+ * 3. Fetch page HTML and parse captions from it
+ *    (original approach — works when DOM methods fail, but may fail behind corporate proxies)
+ * 4. InnerTube API call
+ *    (last resort, separate network request)
  */
 async function extractYouTubeTranscript(videoId: string): Promise<string> {
   try {
-    // Step 1: Fetch the video page HTML to get the InnerTube API key
-    console.log("[Web2Obsidian] Fetching video page for API key...");
-    const htmlResponse = await fetch(
-      `https://www.youtube.com/watch?v=${videoId}`,
-      {
-        headers: {
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-      }
+    // Step 1: Try MAIN world — reads the live window variable (best for SPA)
+    console.log(
+      "[Web2Obsidian] Trying to read player response from MAIN world..."
     );
-    const html = await htmlResponse.text();
-
-    // Step 2: Extract InnerTube API key from HTML
-    const apiKeyMatch = html.match(/"INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)"/);
-    if (!apiKeyMatch) {
+    const mainWorldCaptions = await extractCaptionsFromMainWorld();
+    if (mainWorldCaptions && mainWorldCaptions.length > 0) {
       console.log(
-        "[Web2Obsidian] Could not find InnerTube API key, trying fallback..."
+        "[Web2Obsidian] Found",
+        mainWorldCaptions.length,
+        "caption tracks from MAIN world"
       );
-      return await extractTranscriptFallback(html);
+      return await fetchAndParseCaption(mainWorldCaptions);
     }
-    const apiKey = apiKeyMatch[1];
-    console.log("[Web2Obsidian] Found InnerTube API key");
 
-    // Step 3: Make InnerTube API request (mimicking Android client like youtube-transcript-api)
-    const innertubeResponse = await fetch(
-      `https://www.youtube.com/youtubei/v1/player?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-        body: JSON.stringify({
-          context: {
-            client: {
-              clientName: "ANDROID",
-              clientVersion: "20.10.38",
-            },
-          },
-          videoId: videoId,
-        }),
-      }
-    );
-
-    if (!innertubeResponse.ok) {
+    // Step 2: Try DOM script tags
+    console.log("[Web2Obsidian] Trying DOM script tags...");
+    const domCaptions = extractCaptionsFromPageDOM();
+    if (domCaptions && domCaptions.length > 0) {
       console.log(
-        "[Web2Obsidian] InnerTube API request failed:",
-        innertubeResponse.status
+        "[Web2Obsidian] Found",
+        domCaptions.length,
+        "caption tracks from DOM script tags"
       );
-      return await extractTranscriptFallback(html);
+      return await fetchAndParseCaption(domCaptions);
     }
 
-    const innertubeData = await innertubeResponse.json();
-
-    // Step 4: Extract caption tracks from response
-    const captions =
-      innertubeData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-
-    if (!captions || captions.length === 0) {
-      console.log("[Web2Obsidian] No caption tracks in InnerTube response");
-      return "";
+    // Step 3: Fetch page HTML and parse captions
+    console.log("[Web2Obsidian] Trying fetch-based extraction...");
+    const fetchCaptions = await extractCaptionsViaFetch(videoId);
+    if (fetchCaptions && fetchCaptions.length > 0) {
+      console.log(
+        "[Web2Obsidian] Found",
+        fetchCaptions.length,
+        "caption tracks via fetch"
+      );
+      return await fetchAndParseCaption(fetchCaptions);
     }
 
-    console.log(
-      "[Web2Obsidian] Found",
-      captions.length,
-      "caption tracks via InnerTube API"
-    );
-
-    // Step 5: Find the best caption track
-    const captionTrack = selectBestCaptionTrack(captions);
-
-    if (!captionTrack?.baseUrl) {
-      console.log("[Web2Obsidian] No valid caption track found");
-      return "";
-    }
-
-    console.log(
-      "[Web2Obsidian] Using caption track:",
-      captionTrack.languageCode,
-      captionTrack.kind || "manual"
-    );
-    console.log("[Web2Obsidian] Caption baseUrl:", captionTrack.baseUrl);
-
-    // Step 6: Fetch the caption XML
-    const captionResponse = await fetch(captionTrack.baseUrl);
-    console.log(
-      "[Web2Obsidian] Caption response status:",
-      captionResponse.status
-    );
-    const xml = await captionResponse.text();
-    console.log("[Web2Obsidian] Caption XML length:", xml.length);
-    console.log("[Web2Obsidian] Caption XML preview:", xml.substring(0, 500));
-    return parseTranscriptXml(xml);
+    // Step 4: InnerTube API
+    console.log("[Web2Obsidian] Trying InnerTube API...");
+    return await extractTranscriptViaInnerTube(videoId);
   } catch (error) {
     console.error("[Web2Obsidian] Failed to extract transcript:", error);
     return "";
@@ -175,48 +131,247 @@ async function extractYouTubeTranscript(videoId: string): Promise<string> {
 }
 
 /**
- * Fallback method: Extract captions directly from HTML
+ * Read window.ytInitialPlayerResponse from the page's MAIN world.
+ * Content scripts run in an isolated world and can't access page variables
+ * directly, so we inject a tiny script into MAIN world that dispatches
+ * the caption data back via a CustomEvent.
+ *
+ * This is the most reliable method for SPA navigations where YouTube
+ * updates the variable via JS without creating new <script> tags.
  */
-async function extractTranscriptFallback(html: string): Promise<string> {
-  console.log("[Web2Obsidian] Using fallback HTML parsing method...");
+function extractCaptionsFromMainWorld(): Promise<CaptionTrack[] | null> {
+  return new Promise((resolve) => {
+    const eventName = "__web2obsidian_captions";
 
-  // Try to extract captions JSON by splitting HTML
-  const splittedHtml = html.split('"captions":');
+    const handler = (event: Event) => {
+      document.removeEventListener(eventName, handler);
+      try {
+        const detail = (event as CustomEvent).detail;
+        const captions = JSON.parse(detail);
+        resolve(captions && captions.length > 0 ? captions : null);
+      } catch {
+        resolve(null);
+      }
+    };
 
-  if (splittedHtml.length < 2) {
-    console.log("[Web2Obsidian] No captions found in video page HTML");
-    return "";
-  }
+    document.addEventListener(eventName, handler);
 
-  // Parse the captions JSON
-  const captionsJsonStr = splittedHtml[1]
-    .split(',"videoDetails')[0]
-    .replace(/\n/g, "");
-  let captionsJson;
+    const script = document.createElement("script");
+    script.textContent = `
+      document.dispatchEvent(new CustomEvent("${eventName}", {
+        detail: JSON.stringify(
+          (window.ytInitialPlayerResponse || {})
+            ?.captions?.playerCaptionsTracklistRenderer?.captionTracks || []
+        )
+      }));
+    `;
+    document.documentElement.appendChild(script);
+    script.remove();
+
+    // Timeout — if the event never fires, resolve null
+    setTimeout(() => {
+      document.removeEventListener(eventName, handler);
+      resolve(null);
+    }, 500);
+  });
+}
+
+/**
+ * Fetch the video page HTML and extract captions from it.
+ * This is the original approach — makes a separate HTTP request.
+ * Works reliably in most environments but may fail behind corporate proxies.
+ */
+async function extractCaptionsViaFetch(
+  videoId: string
+): Promise<CaptionTrack[] | null> {
   try {
-    captionsJson = JSON.parse(captionsJsonStr);
-  } catch (parseError) {
-    console.error("[Web2Obsidian] Failed to parse captions JSON:", parseError);
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      headers: {
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    });
+    const html = await response.text();
+
+    const splittedHtml = html.split('"captions":');
+    if (splittedHtml.length < 2) {
+      return null;
+    }
+
+    const captionsJsonStr = splittedHtml[1]
+      .split(',"videoDetails')[0]
+      .replace(/\n/g, "");
+
+    const captionsJson = JSON.parse(captionsJsonStr);
+    const captions =
+      captionsJson?.playerCaptionsTracklistRenderer?.captionTracks;
+
+    return captions && captions.length > 0 ? captions : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract caption tracks from the page's inline script tags.
+ * YouTube embeds ytInitialPlayerResponse in a <script> tag that the
+ * content script can read directly — no fetch required.
+ */
+function extractCaptionsFromPageDOM(): CaptionTrack[] | null {
+  const scripts = document.querySelectorAll("script");
+
+  for (const script of scripts) {
+    const text = script.textContent || "";
+
+    // Look for ytInitialPlayerResponse
+    const marker = "ytInitialPlayerResponse";
+    const idx = text.indexOf(marker);
+    if (idx === -1) continue;
+
+    try {
+      // Find the JSON object start — skip "ytInitialPlayerResponse = " or similar
+      const afterMarker = text.substring(idx + marker.length);
+      const jsonStart = afterMarker.indexOf("{");
+      if (jsonStart === -1) continue;
+
+      // Find matching closing brace
+      const jsonStr = extractJsonObject(afterMarker.substring(jsonStart));
+      if (!jsonStr) continue;
+
+      const playerResponse = JSON.parse(jsonStr);
+      const captions =
+        playerResponse?.captions?.playerCaptionsTracklistRenderer
+          ?.captionTracks;
+
+      if (captions && captions.length > 0) {
+        return captions;
+      }
+    } catch {
+      // Continue to next script tag
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extract a JSON object string by counting braces.
+ * Handles nested objects correctly.
+ */
+function extractJsonObject(str: string): string | null {
+  if (str[0] !== "{") return null;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) {
+        return str.substring(0, i + 1);
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Fallback: Use InnerTube API to get caption tracks.
+ * Makes a separate network request, which may fail behind corporate proxies.
+ */
+async function extractTranscriptViaInnerTube(videoId: string): Promise<string> {
+  // Get InnerTube API key from page scripts
+  const scripts = document.querySelectorAll("script");
+  let apiKey: string | null = null;
+
+  for (const script of scripts) {
+    const text = script.textContent || "";
+    const match = text.match(/"INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)"/);
+    if (match) {
+      apiKey = match[1];
+      break;
+    }
+  }
+
+  if (!apiKey) {
+    console.log("[Web2Obsidian] Could not find InnerTube API key");
     return "";
   }
 
-  const captions = captionsJson?.playerCaptionsTracklistRenderer?.captionTracks;
+  console.log("[Web2Obsidian] Found InnerTube API key, calling player API...");
+
+  const response = await fetch(
+    `https://www.youtube.com/youtubei/v1/player?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      body: JSON.stringify({
+        context: {
+          client: {
+            clientName: "ANDROID",
+            clientVersion: "20.10.38",
+          },
+        },
+        videoId,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    console.log(
+      "[Web2Obsidian] InnerTube API request failed:",
+      response.status
+    );
+    return "";
+  }
+
+  const data = await response.json();
+  const captions =
+    data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
   if (!captions || captions.length === 0) {
-    console.log("[Web2Obsidian] No caption tracks available in fallback");
+    console.log("[Web2Obsidian] No caption tracks in InnerTube response");
     return "";
   }
 
   console.log(
     "[Web2Obsidian] Found",
     captions.length,
-    "caption tracks via fallback"
+    "caption tracks via InnerTube API"
   );
 
+  return await fetchAndParseCaption(captions);
+}
+
+/**
+ * Given caption tracks, select the best one, fetch its XML, and parse it.
+ */
+async function fetchAndParseCaption(captions: CaptionTrack[]): Promise<string> {
   const captionTrack = selectBestCaptionTrack(captions);
 
   if (!captionTrack?.baseUrl) {
-    console.log("[Web2Obsidian] No valid caption track found in fallback");
+    console.log("[Web2Obsidian] No valid caption track found");
     return "";
   }
 
@@ -227,7 +382,13 @@ async function extractTranscriptFallback(html: string): Promise<string> {
   );
 
   const captionResponse = await fetch(captionTrack.baseUrl);
+  if (!captionResponse.ok) {
+    console.log("[Web2Obsidian] Caption fetch failed:", captionResponse.status);
+    return "";
+  }
+
   const xml = await captionResponse.text();
+  console.log("[Web2Obsidian] Caption XML length:", xml.length);
   return parseTranscriptXml(xml);
 }
 
