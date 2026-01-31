@@ -58,7 +58,8 @@ export async function startClipTask(templateId?: string): Promise<string> {
   const obsidianApiSettings: ObsidianApiSettings =
     settings.obsidianApiSettings || createDefaultObsidianApiSettings();
 
-  if (!obsidianApiSettings.apiKey) {
+  // Only require API key if Local REST API is enabled
+  if (obsidianApiSettings.enabled && !obsidianApiSettings.apiKey) {
     throw new Error(
       "Obsidian API key not configured. Please set it in settings."
     );
