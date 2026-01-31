@@ -14,7 +14,7 @@ export const OBSIDIAN_API_HTTP_PORT = 27123;
 
 export function createDefaultObsidianApiSettings(): ObsidianApiSettings {
   return {
-    enabled: true, // Default to using Local REST API
+    enabled: false, // Default to obsidian:// URI (no API key required)
     apiKey: "",
     port: OBSIDIAN_API_HTTPS_PORT, // Default to HTTPS port
     insecureMode: false,
