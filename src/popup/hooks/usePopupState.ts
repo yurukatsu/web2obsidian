@@ -103,7 +103,8 @@ export function usePopupState(t: (key: string) => string) {
       ]);
       setVaultConfigured(!!syncResult.vaultName);
       // REST API disabled means URI mode — no API key needed
-      const apiEnabled = syncResult.obsidianApiSettings?.enabled !== false;
+      // Default is disabled (URI mode), so only require API key if explicitly enabled
+      const apiEnabled = syncResult.obsidianApiSettings?.enabled === true;
       setApiConfigured(!apiEnabled || !!syncResult.obsidianApiSettings?.apiKey);
 
       const localResult = await chrome.storage.local.get(["templateSettings"]);
