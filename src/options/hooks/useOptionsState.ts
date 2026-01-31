@@ -689,25 +689,52 @@ export function useOptionsState(
   // Import/Export
   // ==========================================================================
 
-  const handleExportSettings = () => {
-    chrome.storage.sync.get(null, (data) => {
-      const exportData = {
-        version: "1.0",
-        exportedAt: new Date().toISOString(),
-        settings: data,
+  const handleExportSettings = async () => {
+    // Get both sync and local storage
+    const [syncData, localData] = await Promise.all([
+      chrome.storage.sync.get(null),
+      chrome.storage.local.get(["templateSettings"]),
+    ]);
+
+    // Remove sensitive credentials from export
+    const sanitizedSyncData = { ...syncData };
+
+    // Remove API keys from obsidianApiSettings
+    if (sanitizedSyncData.obsidianApiSettings) {
+      sanitizedSyncData.obsidianApiSettings = {
+        ...sanitizedSyncData.obsidianApiSettings,
+        apiKey: "", // Don't export API key
       };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `web2obsidian-settings-${new Date().toISOString().split("T")[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    }
+
+    // Remove API keys from LLM settings
+    if (sanitizedSyncData.llmSettings) {
+      const llm = { ...sanitizedSyncData.llmSettings };
+      if (llm.openai) llm.openai = { ...llm.openai, apiKey: "" };
+      if (llm.azureOpenai) llm.azureOpenai = { ...llm.azureOpenai, apiKey: "" };
+      if (llm.claude) llm.claude = { ...llm.claude, apiKey: "" };
+      if (llm.gemini) llm.gemini = { ...llm.gemini, apiKey: "" };
+      sanitizedSyncData.llmSettings = llm;
+    }
+
+    const exportData = {
+      version: "1.1",
+      exportedAt: new Date().toISOString(),
+      settings: sanitizedSyncData,
+      templateSettings: localData.templateSettings || null,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
     });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `web2obsidian-settings-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleImportSettings = () => {
@@ -731,17 +758,54 @@ export function useOptionsState(
           return;
         }
 
-        chrome.storage.sync.set(importData.settings, () => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Failed to import settings:",
-              chrome.runtime.lastError
-            );
-            alert(t("options.importExport.importError"));
-            return;
+        // Preserve existing API keys (don't overwrite with empty strings from import)
+        const [existingSyncData] = await Promise.all([
+          chrome.storage.sync.get(["obsidianApiSettings", "llmSettings"]),
+        ]);
+
+        const settingsToImport = { ...importData.settings };
+
+        // Preserve Obsidian API key if import has empty value
+        if (
+          settingsToImport.obsidianApiSettings &&
+          !settingsToImport.obsidianApiSettings.apiKey &&
+          existingSyncData.obsidianApiSettings?.apiKey
+        ) {
+          settingsToImport.obsidianApiSettings.apiKey =
+            existingSyncData.obsidianApiSettings.apiKey;
+        }
+
+        // Preserve LLM API keys if import has empty values
+        if (settingsToImport.llmSettings && existingSyncData.llmSettings) {
+          const providers = [
+            "openai",
+            "azureOpenai",
+            "claude",
+            "gemini",
+          ] as const;
+          for (const provider of providers) {
+            if (
+              settingsToImport.llmSettings[provider] &&
+              !settingsToImport.llmSettings[provider].apiKey &&
+              existingSyncData.llmSettings[provider]?.apiKey
+            ) {
+              settingsToImport.llmSettings[provider].apiKey =
+                existingSyncData.llmSettings[provider].apiKey;
+            }
           }
-          window.location.reload();
-        });
+        }
+
+        // Import sync settings
+        await chrome.storage.sync.set(settingsToImport);
+
+        // Import template settings to local storage if present (v1.1+)
+        if (importData.templateSettings) {
+          await chrome.storage.local.set({
+            templateSettings: importData.templateSettings,
+          });
+        }
+
+        window.location.reload();
       } catch (error) {
         console.error("Failed to parse import file:", error);
         alert(t("options.importExport.invalidFile"));
